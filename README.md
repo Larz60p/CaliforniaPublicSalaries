@@ -5,5 +5,8 @@ This package allows you to graphically download any or all of those files.
 
 It is always up to date
 
-Here's what the GUO looks like:
+Here's what the GUI looks like:
 
+![alt tag](screenshot.png)
+
+Enjoy
