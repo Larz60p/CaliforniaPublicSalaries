@@ -36,6 +36,7 @@ from urllib.parse import urlparse
 import UpdateCatalog
 import socket
 import os
+import zipfile
 
 
 class CaCompGui:
@@ -68,13 +69,12 @@ class CaCompGui:
             # GUI prototypes
             self.fmain1 = tk.Frame
             self.fmain2 = tk.Frame
-            self.frame2 = tk.Frame
-            self.frame3a = tk.Frame
-            self.frame3b = tk.Frame
-            self.frow=0
+            self.frow = 0
             self.tree = ttk.Treeview
+            self.download_tree = ttk.Treeview
             self.textwin = tk.Text
             self.txscroll = tk.Scrollbar
+            self.sb = tk.Frame
 
             # tkinter variables
             self.dest_dir = tk.StringVar()
@@ -111,66 +111,65 @@ class CaCompGui:
 
     def create_main_frames(self):
         self.fmain1 = tk.Frame(self.parent, bd=2, relief=tk.RAISED)
-        self.fmain1.grid(row=self.frow, rowspan=self.treeheight_cat+1,
+        self.fmain1.grid(row=self.frow, rowspan=self.treeheight_cat + 1,
                          column=0, sticky='nwew')
         self.fmain2 = tk.Frame(self.parent, bd=2, relief=tk.RAISED)
         self.fmain2.grid(row=self.frow, rowspan=self.treeheight_cat,
                          column=1, columnspan=3)
-        self.frow += self.treeheight_cat+1
+        self.frow += self.treeheight_cat + 1
 
     def create_frame2(self):
-        self.frame2 = tk.Frame(self.parent, bd=2, padx=2,
-                               pady=2, relief=tk.RAISED)
-        self.frame2.grid(row=self.frow, rowspan=2, column=0,
-                         columnspan=4, sticky='ew')
-        self.fb1 = tk.Button(self.frame2, text='Choose',
-                             command=self.get_dir)
-        self.fb1.grid(row=0, column=0, sticky='ns')
-        self.f2l1 = tk.Label(self.frame2, bd=2, text='Destination Directory: ')
-        self.f2l1.grid(row=0, column=1, sticky='w')
-        self.f2l2 = tk.Label(self.frame2, textvar=self.dest_dir)
-        self.f2l2.grid(row=0, column=2, sticky='w')
+        frame2 = tk.Frame(self.parent, bd=2, padx=2,
+                          pady=2, relief=tk.RAISED)
+        frame2.grid(row=self.frow, rowspan=2, column=0,
+                    columnspan=4, sticky='ew')
+        f2b1 = tk.Button(frame2, text='Choose',
+                         command=self.get_dir)
+        f2b1.grid(row=0, column=0, sticky='ns')
+        f2l1 = tk.Label(frame2, bd=2, text='Destination Directory: ')
+        f2l1.grid(row=0, column=1, sticky='w')
+        f2l2 = tk.Label(frame2, textvar=self.dest_dir)
+        f2l2.grid(row=0, column=2, sticky='w')
         self.frow += 2
 
     def create_frame3(self):
-        self.items_in_tree = 0
-        self.frame3a = tk.Frame(self.parent, bd=2, padx=2,
-                               pady=2, relief=tk.RAISED)
-        self.frame3a.grid(row=self.frow, rowspan=self.treeheight_download, column=0,
-                         sticky='nsew')
-        self.frame3b = tk.Frame(self.parent, bd=2, padx=2,
-                               pady=2, relief=tk.RAISED)
-        self.frame3b.grid(row=self.frow, rowspan=self.treeheight_download, column=1,
-                         columnspan=4, sticky='nsew')
+        frame3a = tk.Frame(self.parent, bd=2, padx=2,
+                           pady=2, relief=tk.RAISED)
+        frame3a.grid(row=self.frow, rowspan=self.treeheight_download,
+                     column=0, sticky='nsew')
+        frame3b = tk.Frame(self.parent, bd=2, padx=2,
+                           pady=2, relief=tk.RAISED)
+        frame3b.grid(row=self.frow, rowspan=self.treeheight_download,
+                     column=1, columnspan=4, sticky='nsew')
 
-        self.download_tree = ttk.Treeview(self.frame3b,
-                                 height=self.treeheight_download,
-                                 padding=(2, 2, 2, 2),
-                                 selectmode="extended")
+        self.download_tree = ttk.Treeview(frame3b,
+                                          height=self.treeheight_download,
+                                          padding=(2, 2, 2, 2),
+                                          selectmode="extended")
         self.download_tree.heading('#0', text='Files to download',
                                    anchor=tk.CENTER)
         self.download_tree.column('#0', stretch=tk.YES, width=400)
 
-        tree_down_scrolly = tk.Scrollbar(self.frame3b, orient=tk.VERTICAL,
-                                   command=self.download_tree.yview)
+        tree_down_scrolly = tk.Scrollbar(frame3b, orient=tk.VERTICAL,
+                                         command=self.download_tree.yview)
 
         tree_down_scrolly.grid(row=0, rowspan=self.treeheight_download,
-                         column=4, sticky='ns')
+                               column=4, sticky='ns')
 
-        tree_down_scrollx = tk.Scrollbar(self.frame3b, orient=tk.HORIZONTAL,
-                                   command=self.download_tree.xview)
+        tree_down_scrollx = tk.Scrollbar(frame3b, orient=tk.HORIZONTAL,
+                                         command=self.download_tree.xview)
         tree_down_scrollx.grid(row=self.treeheight_download + 1, column=0,
-                         columnspan=4, sticky='ew')
+                               columnspan=4, sticky='ew')
         self.download_tree.configure(yscroll=tree_down_scrolly)
         self.download_tree.configure(xscroll=tree_down_scrollx)
         self.download_tree.grid(row=0, rowspan=self.treeheight_download,
                                 column=1, columnspan=3, sticky='nsew')
-        self.b1 = tk.Button(self.frame3a, text='Get Files', padx=2, pady=2, bd=2,
-                            relief=tk.RAISED, command=self.download)
-        self.b1.grid(row=0, column=0, sticky='nsew')
-        self.b2 = tk.Button(self.frame3a, text='Exit', padx=2, pady=2, bd=2,
-                            relief=tk.RAISED, command=self.quit)
-        self.b2.grid(row=2, column=0, sticky='nsew')
+        b1 = tk.Button(frame3a, text='Get Files', padx=2, pady=2, bd=2,
+                       relief=tk.RAISED, command=self.download)
+        b1.grid(row=0, column=0, sticky='nsew')
+        b2 = tk.Button(frame3a, text='Exit', padx=2, pady=2, bd=2,
+                       relief=tk.RAISED, command=self.quit)
+        b2.grid(row=2, column=0, sticky='nsew')
         self.frow += self.treeheight_download + 1
 
     def get_dir(self):
@@ -191,7 +190,7 @@ class CaCompGui:
         self.tree = ttk.Treeview(self.fmain1,
                                  height=self.treeheight_cat,
                                  padding=(2, 2, 2, 2),
-                                 columns=('Year'),
+                                 columns='Year',
                                  selectmode="extended")
 
         self.tree.heading('#0', text='Category', anchor=tk.CENTER)
@@ -203,21 +202,21 @@ class CaCompGui:
         for category, ignore in self.data['url_dict'].items():
             if category == 'DataDictionary':
                 continue
-            id = '{}'.format(vatid)
-            # print('id: {}, category: {}'.format(id, category))
-            self.tree.insert('', iid=id, index='end',
+            cid = '{}'.format(vatid)
+            # print('cid: {}, category: {}'.format(cid, category))
+            self.tree.insert('', iid=cid, index='end',
                              text='{}'.format(category))
             subid = 1
             all_added = False
             for year, url in self.data['url_dict'][category].items():
-                sid = '{}_{}'.format(id, subid)
+                sid = '{}_{}'.format(cid, subid)
                 if not all_added:
-                    self.tree.insert(id, iid=sid, index='end',
+                    self.tree.insert(cid, iid=sid, index='end',
                                      text='{}'.format(category),
                                      value='All')
                     all_added = True
                 else:
-                    self.tree.insert(id, iid=sid, index='end',
+                    self.tree.insert(cid, iid=sid, index='end',
                                      text='{}'.format(category),
                                      value='{}'.format(year))
                 subid += 1
@@ -240,13 +239,12 @@ class CaCompGui:
                                width=113, relief=tk.RAISED)
 
         txscrolly = tk.Scrollbar(self.fmain2, orient=tk.VERTICAL,
-                                   command=self.textwin.yview)
-        txscrolly.grid(row=0, rowspan=self.treeheight_cat+1, column=5, sticky='ns')
+                                 command=self.textwin.yview)
+        txscrolly.grid(row=0, rowspan=self.treeheight_cat + 1, column=5, sticky='ns')
 
         txscrollx = tk.Scrollbar(self.fmain2, orient=tk.HORIZONTAL,
-                                   command=self.textwin.xview)
-        txscrollx.grid(row=self.treeheight_cat+2, column=3, columnspan=2, sticky='ew')
-
+                                 command=self.textwin.xview)
+        txscrollx.grid(row=self.treeheight_cat + 2, column=3, columnspan=2, sticky='ew')
 
         txscrollx.config(command=self.textwin.xview)
         txscrolly.config(command=self.textwin.yview)
@@ -257,7 +255,7 @@ class CaCompGui:
         # self.textwin.configure(yscroll=txscrolly)
         # self.textwin.configure(xscroll=txscrollx)
 
-        self.textwin.grid(row=0, rowspan=self.treeheight_cat+1, column=3,
+        self.textwin.grid(row=0, rowspan=self.treeheight_cat + 1, column=3,
                           columnspan=2, padx=2, pady=2, sticky='nsew')
 
         self.textwin.tag_configure('center', justify='center')
@@ -272,12 +270,11 @@ class CaCompGui:
 
     def create_statusbar(self):
         self.sb = tk.Frame(self.parent, bd=2, padx=2,
-                               pady=2)
+                           pady=2)
         self.sb.grid(row=self.frow, rowspan=2, column=0,
-                         columnspan=4, sticky='nsew')
-        self.sbl1 = tk.Label(self.sb, bd=2, textvariable=self.status)
-        self.sbl1.grid(row=0, column=0, sticky='nsew')
-
+                     columnspan=4, sticky='nsew')
+        sbl1 = tk.Label(self.sb, bd=2, textvariable=self.status)
+        sbl1.grid(row=0, column=0, sticky='nsew')
 
     def file_selected(self, event):
         curitem = self.tree.focus()
@@ -316,6 +313,9 @@ class CaCompGui:
                 with open(outfile, 'wb') as fo:
                     response = requests.get(url)
                     fo.write(response.content)
+                with zipfile.ZipFile(outfile) as z:
+                    z.extractall(self.dest_dir.get())
+                os.remove(outfile)
                 self.status.set('Clearing download list: {}'.format(url))
                 self.download_list = []
                 for row in self.download_tree.get_children():
