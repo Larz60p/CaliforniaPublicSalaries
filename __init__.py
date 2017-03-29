@@ -1,5 +1,5 @@
 src/
     __init__.py
-    CaCompGui.py
+    CaliforniaPublicSalaries.py
     UpdateCatalog.py
     
